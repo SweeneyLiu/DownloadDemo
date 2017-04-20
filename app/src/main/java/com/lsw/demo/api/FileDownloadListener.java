@@ -5,6 +5,7 @@ package com.lsw.demo.api;
  */
 
 public interface FileDownloadListener {
+
     void onProgress(int progress);
 
     void onSuccess();
