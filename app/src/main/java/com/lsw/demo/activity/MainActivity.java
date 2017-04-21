@@ -43,8 +43,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 downloadBinder.startDownload(url);
                 break;
             case R.id.pause_download:
+                downloadBinder.pauseDownload();
                 break;
             case R.id.cancel_download:
+                downloadBinder.cancelDownload();
                 break;
             default:
                 break;

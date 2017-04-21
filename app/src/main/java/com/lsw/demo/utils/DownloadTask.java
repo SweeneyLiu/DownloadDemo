@@ -1,9 +1,11 @@
 package com.lsw.demo.utils;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.webkit.DownloadListener;
 
+import com.lsw.demo.DownloadDemoApplication;
 import com.lsw.demo.api.FileDownloadListener;
 
 import java.io.File;
@@ -30,6 +32,8 @@ public class DownloadTask extends AsyncTask<String, Integer, Integer> {
     private boolean isCancel = false;
     private boolean isPause = false;
 
+    private int lastProgress;
+
     public DownloadTask(FileDownloadListener downloadListener) {
         mDownloadListener = downloadListener;
     }
@@ -39,8 +43,8 @@ public class DownloadTask extends AsyncTask<String, Integer, Integer> {
         String downloadUrl = params[0];
         String fileFullName = downloadUrl.substring(downloadUrl.lastIndexOf("/")+1);//获取请求文件名
         String fileName = fileFullName.substring(0,fileFullName.indexOf("."));
-        String directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();//sd卡的Download目录
-        File file = new File(directory,fileName);//获得文件的全路径
+        File directoryFile = DownloadDemoApplication.getContext().getFilesDir();//files路径
+        File file = new File(directoryFile,fileName);//获得文件的全路径
 
         long downloadedLength = 0;//文件已经下载的长度
         long totalLength = 0;//待下载文件的总长度
@@ -138,11 +142,30 @@ public class DownloadTask extends AsyncTask<String, Integer, Integer> {
 
     @Override
     protected void onProgressUpdate(Integer... values) {
-        super.onProgressUpdate(values);
+        int progress = values[0];
+        if (progress >= lastProgress) {
+            mDownloadListener.onProgress(progress);
+            lastProgress = progress;
+        }
     }
 
     @Override
     protected void onPostExecute(Integer integer) {
-        super.onPostExecute(integer);
+        switch(integer){
+            case TYPE_SUCCESS:
+                mDownloadListener.onSuccess();
+                break;
+            case TYPE_FAILED:
+                mDownloadListener.onFailed();
+                break;
+            case TYPE_PAUSE:
+                mDownloadListener.onPause();
+                break;
+            case TYPE_CANCEL:
+                mDownloadListener.onCancel();
+                break;
+            default:
+                break;
+        }
     }
 }
