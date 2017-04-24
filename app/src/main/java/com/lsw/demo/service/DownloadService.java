@@ -49,7 +49,6 @@ public class DownloadService extends Service {
         @Override
         public void onProgress(int progress) {
             getNotificationManager().notify(1, getNotification("正在下载...", progress));
-            Toast.makeText(DownloadService.this, "正在下载...", Toast.LENGTH_SHORT).show();
         }
 
         @Override

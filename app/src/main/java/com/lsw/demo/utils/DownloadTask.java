@@ -1,9 +1,6 @@
 package com.lsw.demo.utils;
 
-import android.content.Context;
 import android.os.AsyncTask;
-import android.os.Environment;
-import android.webkit.DownloadListener;
 
 import com.lsw.demo.DownloadDemoApplication;
 import com.lsw.demo.api.FileDownloadListener;
@@ -33,6 +30,8 @@ public class DownloadTask extends AsyncTask<String, Integer, Integer> {
     private boolean isPause = false;
 
     private int lastProgress;
+    private File downloadFileName;
+//    private String downloadFilePath;
 
     public DownloadTask(FileDownloadListener downloadListener) {
         mDownloadListener = downloadListener;
@@ -42,17 +41,18 @@ public class DownloadTask extends AsyncTask<String, Integer, Integer> {
     protected Integer doInBackground(String... params) {
         String downloadUrl = params[0];
         String fileFullName = downloadUrl.substring(downloadUrl.lastIndexOf("/")+1);//获取请求文件名
-        String fileName = fileFullName.substring(0,fileFullName.indexOf("."));
+//        String fileName = fileFullName.substring(0,fileFullName.indexOf("."));
         File directoryFile = DownloadDemoApplication.getContext().getFilesDir();//files路径
-        File file = new File(directoryFile,fileName);//获得文件的全路径
+        downloadFileName = new File(directoryFile,fileFullName);//获得文件的全路径
+//        downloadFilePath = new File(directoryFile.getAbsolutePath(),fileName).getAbsolutePath();
 
         long downloadedLength = 0;//文件已经下载的长度
         long totalLength = 0;//待下载文件的总长度
         InputStream is = null;
         RandomAccessFile savedFile = null;
 
-        if(file.exists()){
-            downloadedLength = file.length();
+        if(downloadFileName.exists()){
+            downloadedLength = downloadFileName.length();
         }
 
         try {
@@ -78,7 +78,7 @@ public class DownloadTask extends AsyncTask<String, Integer, Integer> {
 
             if (response != null) {
                 is = response.body().byteStream();
-                savedFile = new RandomAccessFile(file, "rw");
+                savedFile = new RandomAccessFile(downloadFileName, "rw");
                 savedFile.seek(downloadedLength); // 跳过已下载的字节
                 byte[] b = new byte[1024];
                 int total = 0;
@@ -109,8 +109,8 @@ public class DownloadTask extends AsyncTask<String, Integer, Integer> {
                 if (savedFile != null) {
                     savedFile.close();
                 }
-                if (isCancel && file != null) {
-                    file.delete();
+                if (isCancel && downloadFileName != null) {
+                    downloadFileName.delete();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -154,6 +154,11 @@ public class DownloadTask extends AsyncTask<String, Integer, Integer> {
         switch(integer){
             case TYPE_SUCCESS:
                 mDownloadListener.onSuccess();
+                try {
+                    ZipUtil.UnZipFolder(downloadFileName.getAbsolutePath(),DownloadDemoApplication.getContext().getFilesDir().getAbsolutePath());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 break;
             case TYPE_FAILED:
                 mDownloadListener.onFailed();
